@@ -2,7 +2,7 @@ import type { ExternalPluginConfig } from '@windy/interfaces';
 
 const config: ExternalPluginConfig = {
     name: 'windy-plugin-wind-farm-fleet',
-    version: '1.0.1',
+    version: '1.0.2',
     icon: '⚡️',
     title: 'US Wind Farm Fleet',
     description: 'View real-time estimated power output for 1,600+ US wind farms based on current wind conditions.',
