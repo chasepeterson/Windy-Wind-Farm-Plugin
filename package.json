@@ -5,9 +5,9 @@
     "main": "dist/plugin.min.js",
     "type": "module",
     "scripts": {
-        "start": "npx @windycom/plugin-devtools start",
-        "build": "npx @windycom/plugin-devtools build"
-    },
+    "build": "rm -rf dist && mkdir dist && SERVE=false rollup -c && cp package.json dist/",
+    "start": "rollup -w -c"
+},
     "repository": {
         "type": "git",
         "url": "git+https://github.com/chasepeterson/Windy-Wind-Farm-Plugin.git"
@@ -25,5 +25,7 @@
     "homepage": "https://docs.windy-plugins.com/",
     "dependencies": {
         "@windycom/plugin-devtools": "^3.0.1"
-    }
+    },
+    "devDependencies": {
+        "rollup": "^4.0.0"
 }
