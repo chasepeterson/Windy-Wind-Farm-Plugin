@@ -1,7 +1,7 @@
 {
-    "name": "windy-plugin-template",
-    "version": "4.2.2",
-    "description": "Template for developing Windy Plugins",
+    "name": "windy-plugin-wind-farm-fleet",
+    "version": "0.0.1",
+    "description": "Forecast tool for US Wind Farms",
     "main": "dist/plugin.min.js",
     "type": "module",
     "scripts": {
@@ -20,17 +20,17 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/windycom/windy-plugin-template.git"
+        "url": "git+https://github.com/chasepeterson/Windy-Wind-Farm-Plugin.git"
     },
     "keywords": [
-        "windy",
-        "windy.com",
+        "WindFarms",
+        "Wind Farm",
         "plugins"
     ],
-    "author": "Windyty, S.E.",
-    "license": "ISC",
+    "author": "Chase Peterson",
+    "license": "MIT",
     "bugs": {
-        "url": "https://github.com/windycom/windy-plugin-template/issues"
+        "url": "https://github.com/chasepeterson/Windy-Wind-Farm-Plugin/issues"
     },
     "homepage": "https://docs.windy-plugins.com/",
     "dependencies": {
