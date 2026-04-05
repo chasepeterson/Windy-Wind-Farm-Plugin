@@ -1,6 +1,6 @@
 {
     "name": "windy-plugin-wind-farm-fleet",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "description": "Forecast tool for US Wind Farms",
     "main": "dist/plugin.min.js",
     "type": "module",
