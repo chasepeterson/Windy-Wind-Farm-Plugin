@@ -82,8 +82,10 @@ export default {
             emitCss: false,
             compilerOptions: {
                 dev: false,
-            },
-            preprocess: {
+                css: 'injected',
+                discloseVersion: false,
+        },
+        preprocess: {
                 style: less({
                     sourceMap: false,
                     math: 'always',
