@@ -265,7 +265,7 @@
     } from './powerCurve';
 
     // ── Data loading state ────────────────────────────────────────────────────
-    const DATA_BASE_URL = 'https://chasepeterson.github.io/Windy-Wind-Farm-Plugin';
+    const DATA_BASE_URL = 'https://cdn.jsdelivr.net/gh/chasepeterson/Windy-Wind-Farm-Plugin@main';
     let dataReady = false;
     let dataError = false;
 
