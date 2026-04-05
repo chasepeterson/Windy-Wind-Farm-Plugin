@@ -272,19 +272,16 @@
 
     // Color lookup: 0Ã¢â‚¬â€œ100% capacity factor Ã¢â€ â€™ 101 pre-built color strings
     const COLOR_LUT: string[] = new Array(101);
-    const COLOR_CUTOUT = '#a10b0b';
+    const COLOR_CUTOUT = '#000000';
     const COLOR_IDLE = '#c4c3c2';
     (() => {
+        // Warm ramp: light cream → amber → deep maroon. No blue. Black reserved for cut-out only.
         for (let cf = 0; cf <= 100; cf++) {
-            if (cf >= 97) {
-                COLOR_LUT[cf] = COLOR_CUTOUT;
-            } else {
-                const t = cf / 97;
-                const r = Math.round(253 - t * 75);
-                const g = Math.round(222 - t * 136);
-                const b = Math.round(193 - t * 193);
-                COLOR_LUT[cf] = `rgb(${r},${g},${b})`;
-            }
+            const t = cf / 100;
+            const r = Math.round(255 - t * 115);   // 255 → 140
+            const g = Math.round(248 - t * 218);   // 248 → 30
+            const b = Math.round(210 - t * 210);   // 210 → 0
+            COLOR_LUT[cf] = `rgb(${r},${g},${b})`;
         }
     })();
     function lookupColor(capacityFactor: number, windSpeed: number): string {
@@ -591,7 +588,10 @@
             interactive: true,
             bubblingMouseEvents: false
         });
-        marker.on('click', () => selectFarm(farm));
+        marker.on('click', (e) => {
+            L.DomEvent.stopPropagation(e);
+            selectFarm(farm);
+        });
         marker.addTo(map);
         return marker;
     }
@@ -666,55 +666,37 @@
         updateFarmWindData(farm);
     }
 
-    async function updateFarmWindData(farm: WindFarm, retries: number = 3) {
+    async function updateFarmWindData(farm: WindFarm) {
         try {
             const interpolator = await getLatLonInterpolator();
-            if (!interpolator) {
-                if (retries > 0) {
-                    setTimeout(() => updateFarmWindData(farm, retries - 1), 800);
-                } else {
-                    console.warn('Wind plugin: interpolator unavailable after retries');
-                }
-                return;
-            }
+            if (!interpolator) return;
 
             if (store.get('overlay') !== 'wind') {
                 store.set('overlay', 'wind');
-                setTimeout(() => updateFarmWindData(farm, retries), 500);
+                setTimeout(() => updateFarmWindData(farm), 500);
                 return;
             }
 
             const result = await interpolator({ lat: farm.lat, lon: farm.lon });
-            if (!Array.isArray(result)) {
-                if (retries > 0) {
-                    setTimeout(() => updateFarmWindData(farm, retries - 1), 800);
-                }
-                return;
+            if (Array.isArray(result)) {
+                const { dir, wind } = wind2obj(result);
+                const { totalPower, turbineClassOutputs } = calculateFarmPower(farm, wind);
+                const cf = (totalPower / (farm.capacity * 1000)) * 100;
+                const color = lookupColor(cf, wind);
+                
+                selectedFarmData = {
+                    windSpeed: wind,
+                    windDir: dir,
+                    totalPower,
+                    capacityFactor: cf,
+                    status: getOperationalStatus(wind),
+                    statusClass: getStatusClass(wind, cf),
+                    color,
+                    turbineClassOutputs
+                };
             }
-
-            // Guard: make sure this farm is still the selected one
-            if (selectedFarm !== farm) return;
-
-            const { dir, wind } = wind2obj(result);
-            const { totalPower, turbineClassOutputs } = calculateFarmPower(farm, wind);
-            const cf = (totalPower / (farm.capacity * 1000)) * 100;
-            const color = lookupColor(cf, wind);
-            
-            selectedFarmData = {
-                windSpeed: wind,
-                windDir: dir,
-                totalPower,
-                capacityFactor: cf,
-                status: getOperationalStatus(wind),
-                statusClass: getStatusClass(wind, cf),
-                color,
-                turbineClassOutputs
-            };
         } catch (err) {
             console.error('Wind plugin: Error in updateFarmWindData', err);
-            if (retries > 0) {
-                setTimeout(() => updateFarmWindData(farm, retries - 1), 800);
-            }
         }
     }
 
