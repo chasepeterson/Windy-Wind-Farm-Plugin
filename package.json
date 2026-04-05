@@ -5,9 +5,9 @@
     "main": "dist/plugin.min.js",
     "type": "module",
     "scripts": {
-    "build": "rm -rf dist && mkdir dist && SERVE=false rollup -c && cp package.json dist/",
-    "start": "rollup -w -c"
-},
+        "build": "rm -rf dist && mkdir dist && SERVE=false rollup -c && cp package.json dist/",
+        "start": "rollup -w -c"
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/chasepeterson/Windy-Wind-Farm-Plugin.git"
@@ -28,4 +28,5 @@
     },
     "devDependencies": {
         "rollup": "^4.0.0"
+    }
 }
