@@ -80,6 +80,9 @@ export default {
     plugins: [
         rollupSvelte({
             emitCss: false,
+            compilerOptions: {
+                dev: false,
+            },
             preprocess: {
                 style: less({
                     sourceMap: false,
