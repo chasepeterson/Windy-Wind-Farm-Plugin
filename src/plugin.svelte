@@ -9,6 +9,17 @@
         {title}
     </div>
 
+    {#if dataError}
+        <div class="data-error">
+            <p>⚠️ Failed to load wind farm data.</p>
+            <p>Please check your connection and reload.</p>
+        </div>
+    {:else if !dataReady}
+        <div class="data-loading">
+            <div class="loading-spinner"></div>
+            <p>Loading wind farm data…</p>
+        </div>
+    {:else}
     <div class="turbine-plugin">
         <!-- Farm Count & Status -->
         <div class="header-section">
@@ -230,6 +241,7 @@
             </div>
         {/if}
     </div>
+    {/if}
 </section>
 
 <script lang="ts">
@@ -241,15 +253,38 @@
     import { onDestroy, onMount } from 'svelte';
     
     import config from './pluginConfig';
-    import { WIND_FARMS, type WindFarm, type TurbineClass } from './farmData';
+    import { WIND_FARMS, setWindFarms, type WindFarm, type TurbineClass } from './farmData';
     import { 
         getPowerOutput, 
         getTurbinePowerOutput,
         getOperationalStatus,
         getPowerCurve,
         hasPowerCurve,
+        setPowerCurveDb,
         type PowerCurvePoint
     } from './powerCurve';
+
+    // ── Data loading state ────────────────────────────────────────────────────
+    const DATA_BASE_URL = 'https://chasepeterson.github.io/Windy-Wind-Farm-Plugin';
+    let dataReady = false;
+    let dataError = false;
+
+    async function loadPluginData(): Promise<void> {
+        try {
+            const [farmsRes, curvesRes] = await Promise.all([
+                fetch(`${DATA_BASE_URL}/farmData.json`),
+                fetch(`${DATA_BASE_URL}/powerCurveDb.json`)
+            ]);
+            if (!farmsRes.ok || !curvesRes.ok) throw new Error('Failed to fetch data');
+            const [farms, curves] = await Promise.all([farmsRes.json(), curvesRes.json()]);
+            setWindFarms(farms);
+            setPowerCurveDb(curves);
+            dataReady = true;
+        } catch (e) {
+            console.error('Wind Farm Plugin: failed to load data', e);
+            dataError = true;
+        }
+    }
 
     const { title } = config;
 
@@ -272,16 +307,19 @@
 
     // Color lookup: 0Ã¢â‚¬â€œ100% capacity factor Ã¢â€ â€™ 101 pre-built color strings
     const COLOR_LUT: string[] = new Array(101);
-    const COLOR_CUTOUT = '#000000';
+    const COLOR_CUTOUT = '#a10b0b';
     const COLOR_IDLE = '#c4c3c2';
     (() => {
-        // Warm ramp: light cream → amber → deep maroon. No blue. Black reserved for cut-out only.
         for (let cf = 0; cf <= 100; cf++) {
-            const t = cf / 100;
-            const r = Math.round(255 - t * 115);   // 255 → 140
-            const g = Math.round(248 - t * 218);   // 248 → 30
-            const b = Math.round(210 - t * 210);   // 210 → 0
-            COLOR_LUT[cf] = `rgb(${r},${g},${b})`;
+            if (cf >= 97) {
+                COLOR_LUT[cf] = COLOR_CUTOUT;
+            } else {
+                const t = cf / 97;
+                const r = Math.round(253 - t * 75);
+                const g = Math.round(222 - t * 136);
+                const b = Math.round(193 - t * 193);
+                COLOR_LUT[cf] = `rgb(${r},${g},${b})`;
+            }
         }
     })();
     function lookupColor(capacityFactor: number, windSpeed: number): string {
@@ -584,14 +622,9 @@
             fillOpacity: 0.8,
             color: '#fff',
             weight: 0.5,
-            opacity: 0.6,
-            interactive: true,
-            bubblingMouseEvents: false
+            opacity: 0.6
         });
-        marker.on('click', (e) => {
-            L.DomEvent.stopPropagation(e);
-            selectFarm(farm);
-        });
+        marker.on('click', () => selectFarm(farm));
         marker.addTo(map);
         return marker;
     }
@@ -898,7 +931,10 @@
         }
     };
 
-    onMount(() => {
+    onMount(async () => {
+        // Load farm + power curve data from GitHub Pages before rendering
+        await loadPluginData();
+
         const vis = getVisibleIndices();
         syncMarkers(vis);
         updateStatsFromCache(vis);
@@ -1391,5 +1427,36 @@
 
     :global(.farm-tooltip::before) {
         border-top-color: rgba(0,0,0,0.8) !important;
+    }
+
+    .data-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        color: #aaa;
+        font-size: 13px;
+        gap: 12px;
+    }
+
+    .loading-spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid #444;
+        border-top-color: #4CAF50;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .data-error {
+        padding: 20px;
+        color: #ff6b6b;
+        font-size: 13px;
+        text-align: center;
     }
 </style>
